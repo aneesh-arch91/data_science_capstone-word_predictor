@@ -11,19 +11,19 @@ trigrams <- readRDS('trigrams.rds')
 quadrigrams <- readRDS('quadrigrams.rds')
 
 ngram_nextword <- function(inputword, ng_dataset) {
-	ngrams_word <- ng_dataset[grep(paste0('^', inputword, ' .'), ng_dataset$ngram),]
+	ngrams_word <- ng_dataset[grep(paste0('^', inputword, ' .'), ng_dataset$ngram),] #finding the input among the ngrams
 
-	if (nrow(ngrams_word) == 0)
+	if (nrow(ngrams_word) == 0) #if the input is not found
 	{
 		ngrams_word <- ngrams_word %>%
 			add_column(n = NA) %>%
 			add_row(ngram = " ", n = 0)
 	}
 
-	ngrams_word <- ngrams_word %>%
+	ngrams_word <- ngrams_word %>% # ordering the ngrams in order of frequency
 		count(ngram, sort=TRUE)
 
-	ngrams_word[1,]
+	ngrams_word[1,] #returning the most frequent ngram match
 }
 
 nextword <- function(inputtext, bigram_data, trigram_data, quadrigram_data) {
@@ -61,6 +61,7 @@ nextword <- function(inputtext, bigram_data, trigram_data, quadrigram_data) {
 		bi_nextword <- ngram_nextword(unigram, bigram_data)
 	}
 
+	# Stupid backoff model
 	if (quad_nextword$n >= max(tri_nextword$n, bi_nextword$n))
 		return(tail(unlist(strsplit(quad_nextword$ngram, split=' ')), 1))
 	else
@@ -79,6 +80,7 @@ server <- shinyServer(
 			input$textinput
 		})
 
+		#predicted word
 		output$pred_word <- renderText({
 			nextword(input$textinput, bigrams, trigrams, quadrigrams)
 		})
